@@ -1,0 +1,16 @@
+.scroll-scroller{
+    border: 1px solid red;
+    height:400px;
+    width: 300px;
+    overflow-y:scroll;
+}
+.scroll-before-content{}
+.scroll-after-content{}
+.scroll-content{
+    display: block;   
+}
+.scroll-content-item{
+    padding: 50px auto!important;
+    min-height: 100px;
+    border:1px solid blue;
+}
