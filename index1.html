@@ -7,7 +7,7 @@
 	<link rel="stylesheet" href="scroll.css">
 </head>
 <body ng-app="virtualScroll" ng-controller="virtualScrollerController" ng-cloak>
-	<scroll page-size="10" load-data="loadData">
+	<scroll page-size="8" load-data="loadData">
 		<div 
 			ng-repeat="paragraph in item.paragraphs" 
 			class="scroll-content-item" 
@@ -28,13 +28,13 @@
 	<script src="jsextension.js"></script>
 	<script src="domHelper.js"></script>
 	<script src="anglarHelper.js"></script>
-	<script src="virtualScrollerController.js"></script>
-	<script src="myevent.js"></script>
 	<script src="aiHelper.js"></script>
 	<script src="numberHelper.js"></script>
 	<script src="ruleRepository.js"></script>
 	<script src="scrollerHelper.js"></script>
 	<script src="positionRepository.js"></script>
 	<script src="eventManager.js"></script>
+	<script src="virtualScrollerController.js"></script>
+	<script src="myevent.js"></script>
 </body>
 </html>

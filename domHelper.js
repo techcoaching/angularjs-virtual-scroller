@@ -3,7 +3,7 @@ window.domHelper = {
     getLineHeight: getLineHeight
 };
 function getLineHeight() {
-    console.log("line-height", window.lineHeight);
+    //console.log("line-height", window.lineHeight);
     return window.lineHeight;
 }
 function getElement(selector) {

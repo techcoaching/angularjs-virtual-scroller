@@ -96,7 +96,7 @@ Array.prototype.forEach = function (callback) {
 
 Array.prototype.firstOrDefault = function (callback) {
     callback = callback || function () { return true; };
-    var result = this.where(callback);
+    var result = this.where(callback, true);
     var resultItem = {};
     if (Array.any(result)) {
         resultItem = result[0];
@@ -114,11 +114,14 @@ Array.prototype.lastOrDefault = function (callback) {
     return resultItem;
 }
 
-Array.prototype.where = function (callback) {
+Array.prototype.where = function (callback, isFirst) {
     var result = [];
     for (var index = 0; index < this.length; index++) {
         if (!callback(this[index])) { continue; }
         result.push(this[index]);
+        if (isFirst && isFirst === true) {
+            break;
+        }
     }
     return result;
 }

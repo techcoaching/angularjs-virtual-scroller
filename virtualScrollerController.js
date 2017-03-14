@@ -26,9 +26,6 @@ app.controller('virtualScrollerController', function JournalController($scope) {
                 controller.init();
                 var template = scrollTemplate(html);
                 $element.append($compile(template)($scope));
-
-
-
                 $scope.next = function () {
                     controller.next();
                 };
@@ -54,6 +51,7 @@ app.controller('virtualScrollerController', function JournalController($scope) {
 
     function ScrollDirectiveController($scope, $timeout) {
         var self = this;
+        self.enableScroll = true;
         self.pageIndex = 1;
         self.onScroll = onScroll;
         self.init = init;
@@ -79,7 +77,7 @@ app.controller('virtualScrollerController', function JournalController($scope) {
         }
 
         function onItemHeightUpdated(option) {
-            console.log("onItemHeightUpdated", option);
+            //console.log("onItemHeightUpdated", option);
             $scope.heights[Number.format(option.itemId, 6)] = option;
         }
         function onDataRendered() {
@@ -92,19 +90,41 @@ app.controller('virtualScrollerController', function JournalController($scope) {
 
             var beforeContentHeight = getPredictBeforeContentHeight($scope);
             var afterContentHeight = getPredictAfterContentHeight($scope, beforeContentHeight);
+            console.log("Height of before content: ", $scope.beforeContent[0].style.height, beforeContentHeight)
             $scope.beforeContent[0].style.height = beforeContentHeight + "px";
             $scope.afterContent[0].style.height = afterContentHeight + "px";
             scrollTo(self.pageIndex <= 1 ? 0 : beforeContentHeight);
+
+            self.enableScroll = true;
         }
         function initScrollerObject($scope) {
-            $scope.scroller = angularHelper.getElement(".scroll-scroller");
-            $scope.beforeContent = angularHelper.getElement(".scroll-before-content");
-            $scope.afterContent = angularHelper.getElement(".scroll-after-content");
-            $scope.content = angularHelper.getElement(".scroll-content");
-            $scope.scroller.bind("scroll", self.onScroll);
+            if (!$scope.scroller) {
+                $scope.scroller = angularHelper.getElement(".scroll-scroller");
+            }
+            if (!$scope.beforeContent) {
+                $scope.beforeContent = angularHelper.getElement(".scroll-before-content");
+            }
+            if (!$scope.afterContent) {
+                $scope.afterContent = angularHelper.getElement(".scroll-after-content");
+            }
+            if (!$scope.content) {
+                $scope.content = angularHelper.getElement(".scroll-content");
+            }
+            $scope.scroller.bind("scroll", function (event) {
+                if (self.timer) { return; }
+                self.timer = window.setTimeout(function () {
+                    self.onScroll(event);
+                    console.log("clear timeout");
+                    window.clearTimeout(self.timer);
+                    self.timer = null;
+                }, 300);
+
+            });
         }
         function scrollTo(offset) {
-            $scope.scroller[0].scrollTop = offset;
+            console.log("scrollTo", offset);
+            $scope.scroller[0].scrollTop = offset + "px";
+            //$scope.content[0].top = "0px";
         }
         function getPredictAfterContentHeight($scope, heightOfBeforeContent) {
             var position = positionRepository.getByIndex($scope.totalItems);
@@ -114,9 +134,10 @@ app.controller('virtualScrollerController', function JournalController($scope) {
             return numberOfItemAfterContent * itemHeight;
         }
         function getPredictBeforeContentHeight($scope) {
-            if (!$scope.items || $scope.items.length == 0 || $scope.items[0].paragraphs.length <= 0) { return 0; }
-            var topItemIndex = $scope.items[0].paragraphs.firstOrDefault().itemIndex;
+            //if (!$scope.items || $scope.items.length == 0 || $scope.items[0].paragraphs.length <= 0) { return 0; }
+            var topItemIndex = $scope.fromIndex;
             var position = positionRepository.getByIndex(topItemIndex);
+            console.log(position, $scope.fromIndex);
             if (position) {
                 return position.offsetTop;
             }
@@ -132,7 +153,7 @@ app.controller('virtualScrollerController', function JournalController($scope) {
                     height: item.offsetHeight,
                     length: item.innerHTML.length,
                     lineHeight: window.lineHeight(item),
-                    itemIndex: item.attributes["item-index"].value,
+                    itemIndex: parseInt(item.attributes["item-index"].value),
                     offsetTop: item.offsetTop,
                     pageIndex: self.pageIndex,
                     pageSize: 8
@@ -141,6 +162,16 @@ app.controller('virtualScrollerController', function JournalController($scope) {
             });
         }
         function onScroll(event) {
+            if (!self.enableScroll) { return true; }
+            var scrollTop = event.target.scrollTop;
+            var position = window.positionRepository.getByOffset(scrollTop);
+            if (!position) { return; }
+            if (position >= $scope.toIndex - 3) {
+                self.enableScroll = false;
+                console.log("Next", position, scrollTop);
+                self.next();
+            }
+            console.log("Scroll:", self.enableScroll, position, scrollTop, $scope.toIndex);
         }
 
         function loadData(pageIndex) {
@@ -150,6 +181,8 @@ app.controller('virtualScrollerController', function JournalController($scope) {
             }
             $scope.loadData()({ pageSize: $scope.pageSize, pageIndex: pageIndex }).then(function (response) {
                 $scope.items = response.data;
+                $scope.fromIndex = parseInt(response.paging.fromIndex);
+                $scope.toIndex = parseInt(response.paging.toIndex);
                 $scope.totalItems = response.paging.total;
                 $scope.$apply();
             });
