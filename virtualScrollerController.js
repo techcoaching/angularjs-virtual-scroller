@@ -123,7 +123,7 @@ app.controller('virtualScrollerController', function JournalController($scope) {
         }
         function scrollTo(offset) {
             console.log("scrollTo", offset);
-            $scope.scroller[0].scrollTop = offset + "px";
+            $scope.scroller[0].scrollTop = 2*offset + "px";
             //$scope.content[0].top = "0px";
         }
         function getPredictAfterContentHeight($scope, heightOfBeforeContent) {
