@@ -1,6 +1,11 @@
 window.domHelper = {
-    getElement: getElement
+    getElement: getElement,
+    getLineHeight: getLineHeight
 };
+function getLineHeight() {
+    console.log("line-height", window.lineHeight);
+    return window.lineHeight;
+}
 function getElement(selector) {
     var items;
     if (selector.startWith("#")) {

@@ -82,19 +82,20 @@ Array.any = function (array) {
     return array && array.length > 0;
 }
 
-// Array.prototype.forEach = function (callback) {
-//     for (var index = 0; index < this.length; index++) {
-//         var item = this[index];
-//         try {
-//             callback(item, index);
-//         } catch (e) {
-//             console.log(item, e);
-//         }
-//     }
-// }
+Array.prototype.forEach = function (callback) {
+    for (var index = 0; index < this.length; index++) {
+        var item = this[index];
+        try {
+            callback(item, index);
+        } catch (e) {
+            console.log(item, e);
+        }
+    }
+}
 
 
 Array.prototype.firstOrDefault = function (callback) {
+    callback = callback || function () { return true; };
     var result = this.where(callback);
     var resultItem = {};
     if (Array.any(result)) {
@@ -102,6 +103,17 @@ Array.prototype.firstOrDefault = function (callback) {
     }
     return resultItem;
 }
+
+Array.prototype.lastOrDefault = function (callback) {
+    callback = callback || function () { return true; };
+    var result = this.where(callback);
+    var resultItem = {};
+    if (Array.any(result)) {
+        resultItem = result[result.length - 1];
+    }
+    return resultItem;
+}
+
 Array.prototype.where = function (callback) {
     var result = [];
     for (var index = 0; index < this.length; index++) {
@@ -140,6 +152,7 @@ Array.prototype.removeItem = function (item) {
     }
     return this;
 };
+
 
 /* Extension for string*/
 String.empty = "";
@@ -463,13 +476,20 @@ Number.prototype.round = function (places) {
     return +(Math.round(this + "e+" + places) + "e-" + places);
 };
 
+Number.roundUpper = function (value) {
+    var round = Math.round(value);
+    return round < value ? round + 1 : round;
+}
+
 Number.format = function (value, decimalPlace) {
-    if (value) {
-        return value.toString(decimalPlace);
-    } else {
-        value = 0;
-        return decimalPlace ? value.toFixed(decimalPlace) : 0;
-    }
+    value = value || 0;
+    return padLeft(value, decimalPlace);
+    // if (value) {
+    //     return value.toString(decimalPlace);
+    // } else {
+    //     value = 0;
+    //     return decimalPlace ? value.toFixed(decimalPlace) : 0;
+    // }
 };
 
 function padLeft(value, length) {
@@ -478,10 +498,6 @@ function padLeft(value, length) {
         str = "0" + str;
     return str;
 }
-
-Number.prototype.padLeft = function (length) {
-    return padLeft(this, length);
-};
 
 String.prototype.padLeft = function (length) {
     return padLeft(this, length);

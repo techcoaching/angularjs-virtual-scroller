@@ -8,7 +8,13 @@
 </head>
 <body ng-app="virtualScroll" ng-controller="virtualScrollerController" ng-cloak>
 	<scroll page-size="10" load-data="loadData">
-		<div ng-repeat="paragraph in item.paragraphs" class="scroll-content-item" item-id={{paragraph.id}} my-event>
+		<div 
+			ng-repeat="paragraph in item.paragraphs" 
+			class="scroll-content-item" 
+			item-id={{paragraph.id}} 
+			item-index={{paragraph.itemIndex}}
+			my-event
+			>
 			{{paragraph.html}}
 		</div>
 	</scroll>
@@ -18,11 +24,17 @@
 	<script src="bower_components/angular-aria/angular-aria.js"></script>
 	<script src="bower_components/angular-messages/angular-messages.js"></script>
 	<script src="bower_components/angular-material/angular-material.js"></script>
+	<script src="bower_components/line-height/dist/line-height.js"></script>
 	<script src="jsextension.js"></script>
 	<script src="domHelper.js"></script>
 	<script src="anglarHelper.js"></script>
 	<script src="virtualScrollerController.js"></script>
 	<script src="myevent.js"></script>
+	<script src="aiHelper.js"></script>
+	<script src="numberHelper.js"></script>
+	<script src="ruleRepository.js"></script>
+	<script src="scrollerHelper.js"></script>
+	<script src="positionRepository.js"></script>
 	<script src="eventManager.js"></script>
 </body>
 </html>
