@@ -59,6 +59,7 @@ app.controller('virtualScrollerController', function JournalController($scope) {
         self.next = next;
         self.previous = previous;
         $scope.heights = {};
+        self.direction = 1;
 
         loadData(self.pageIndex);
 
@@ -92,17 +93,28 @@ app.controller('virtualScrollerController', function JournalController($scope) {
             //var beforeContentHeight= $scope.scroller[0].scrollTop;
             var afterContentHeight = getPredictAfterContentHeight($scope, beforeContentHeight);
             var contentHeight = $scope.content.height();
-            var relativeHeight = recalculateRelativeHeight({ beforeContentHeight: beforeContentHeight, contentHeight: contentHeight, afterContentHeight: afterContentHeight });
-            console.log("RelativeHeight: ", relativeHeight)
-            // $scope.beforeContent[0].style.height = beforeContentHeight + "px";
-            // $scope.afterContent[0].style.height = afterContentHeight + "px";
+            //var relativeHeight = recalculateRelativeHeight({ beforeContentHeight: beforeContentHeight, contentHeight: contentHeight, afterContentHeight: afterContentHeight });
+            //console.log("RelativeHeight: ", relativeHeight)
+            if (self.direction == 1) {
+                $scope.beforeContent[0].style.height = beforeContentHeight + "px";
+                $scope.afterContent[0].style.height = afterContentHeight + "px";
+                self.contentHeight = contentHeight;
+                self.beforeContentHeight = beforeContentHeight;
+            }
 
-            $scope.beforeContent[0].style.height = relativeHeight.beforeContent + "px";
-            $scope.afterContent[0].style.height = relativeHeight.afterContent + "px";
+            // if (self.direction == -1) {
+            //     $scope.beforeContent[0].style.height = (beforeContentHeight - contentHeight) + "px";
+            //     $scope.afterContent[0].style.height = (afterContentHeight + contentHeight) + "px";
+            //     self.contentHeight = contentHeight;
+            //     self.beforeContentHeight = beforeContentHeight;
+            // }
+
+            //$scope.beforeContent[0].style.height = relativeHeight.beforeContent + "px";
+            //$scope.afterContent[0].style.height = relativeHeight.afterContent + "px";
             //scrollTo(self.pageIndex <= 1 ? 0 : beforeContentHeight);
-            self.relativeUnit = relativeHeight.relativeUnit;
+            //self.relativeUnit = relativeHeight.relativeUnit;
 
-            pagingRepository.add({ pageIndex: self.pageIndex, topOffset: relativeHeight.beforeContent, bottomOffset: relativeHeight.afterContent });
+            //pagingRepository.add({ pageIndex: self.pageIndex, topOffset: relativeHeight.beforeContent, bottomOffset: relativeHeight.afterContent });
             self.enableScroll = true;
         }
         function recalculateRelativeHeight(heightOption) {
@@ -127,18 +139,18 @@ app.controller('virtualScrollerController', function JournalController($scope) {
             //$scope.content[0].top = "0px";
         }
         function initScrollerObject($scope) {
-            if (!$scope.scroller) {
-                $scope.scroller = angularHelper.getElement(".scroll-scroller");
-            }
-            if (!$scope.beforeContent) {
-                $scope.beforeContent = angularHelper.getElement(".scroll-before-content");
-            }
-            if (!$scope.afterContent) {
-                $scope.afterContent = angularHelper.getElement(".scroll-after-content");
-            }
-            if (!$scope.content) {
-                $scope.content = angularHelper.getElement(".scroll-content");
-            }
+            //if (!$scope.scroller) {
+            $scope.scroller = angularHelper.getElement(".scroll-scroller");
+            //}
+            //if (!$scope.beforeContent) {
+            $scope.beforeContent = angularHelper.getElement(".scroll-before-content");
+            //}
+            //if (!$scope.afterContent) {
+            $scope.afterContent = angularHelper.getElement(".scroll-after-content");
+            //}
+            //if (!$scope.content) {
+            $scope.content = angularHelper.getElement(".scroll-content");
+            //}
             $scope.scroller.bind("scroll", function (event) {
                 if (self.timer) { return; }
                 self.timer = window.setTimeout(function () {
@@ -159,16 +171,17 @@ app.controller('virtualScrollerController', function JournalController($scope) {
             return numberOfItemAfterContent * itemHeight;
         }
         function getPredictBeforeContentHeight($scope) {
-            //if (!$scope.items || $scope.items.length == 0 || $scope.items[0].paragraphs.length <= 0) { return 0; }
-            var topItemIndex = $scope.fromIndex;
-            var position = positionRepository.getByIndex(topItemIndex);
-            console.log(position, $scope.fromIndex);
-            if (position) {
-                return position.offsetTop;
-            }
-            var offsetTop = topItemIndex * scrollerHelper.getScrollItemHeight()
-            //positionRepository.save({ index: topItemIndex, offsetTop: offsetTop });
-            return offsetTop;
+            return $scope.scroller[0].scrollTop;
+            // //if (!$scope.items || $scope.items.length == 0 || $scope.items[0].paragraphs.length <= 0) { return 0; }
+            // var topItemIndex = $scope.fromIndex;
+            // var position = positionRepository.getByIndex(topItemIndex);
+            // console.log(position, $scope.fromIndex);
+            // if (position) {
+            //     return position.offsetTop;
+            // }
+            // var offsetTop = topItemIndex * scrollerHelper.getScrollItemHeight()
+            // //positionRepository.save({ index: topItemIndex, offsetTop: offsetTop });
+            // return offsetTop;
         }
         function updateItemHeight($scope) {
             var items = $scope.scroller[0].querySelectorAll(".scroll-content-item");
@@ -187,24 +200,39 @@ app.controller('virtualScrollerController', function JournalController($scope) {
             });
         }
         function onScroll(event) {
+            // console.log(event);
+            // self.direction = event.target.scrollTop > self.previousScrollPosition ? 1 : -1;
+            // self.previousScrollPosition = event.target.scrollTop;
             if (!self.enableScroll) { return true; }
             var scrollTop = event.target.scrollTop;
-            var page = window.pagingRepository.getByIndex(self.pageIndex);
-            if (!page) { return; }
-            if (page.bottomOffset - 100 < scrollTop) {
+            console.log("OnScroll", self.contentHeight, self.beforeContentHeight, scrollTop);
+            if (self.contentHeight + self.beforeContentHeight - 100 < scrollTop) {
                 self.enableScroll = false;
-                console.log("Next", page, scrollTop);
+                console.log("Next", self.contentHeight, self.beforeContentHeight, scrollTop);
                 self.next();
             }
-            // var scrollTop = event.target.scrollTop;
-            // var position = window.positionRepository.getByOffset(scrollTop);
-            // if (!position) { return; }
-            // if (position >= $scope.toIndex - 3) {
+
+            if (self.beforeContentHeight + 100 > scrollTop) {
+                self.enableScroll = false;
+                console.log("Next", self.contentHeight, self.beforeContentHeight, scrollTop);
+                self.previous();
+            }
+            // var page = window.pagingRepository.getByIndex(self.pageIndex);
+            // if (!page) { return; }
+            // if (page.bottomOffset - 100 < scrollTop) {
             //     self.enableScroll = false;
-            //     console.log("Next", position, scrollTop);
+            //     console.log("Next", page, scrollTop);
             //     self.next();
             // }
-            console.log("Scroll:", self.enableScroll, page, scrollTop);
+            // // var scrollTop = event.target.scrollTop;
+            // // var position = window.positionRepository.getByOffset(scrollTop);
+            // // if (!position) { return; }
+            // // if (position >= $scope.toIndex - 3) {
+            // //     self.enableScroll = false;
+            // //     console.log("Next", position, scrollTop);
+            // //     self.next();
+            // // }
+            // // console.log("Scroll:", self.enableScroll, position, scrollTop);
         }
 
         function loadData(pageIndex) {
