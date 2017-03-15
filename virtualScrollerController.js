@@ -91,7 +91,7 @@ app.controller('virtualScrollerController', function JournalController($scope) {
             var beforeContentHeight = getPredictBeforeContentHeight($scope);
             //var beforeContentHeight= $scope.scroller[0].scrollTop;
             var afterContentHeight = getPredictAfterContentHeight($scope, beforeContentHeight);
-            var contentHeight = $scope.content[0].style.height;
+            var contentHeight = $scope.content.height();
             var relativeHeight = recalculateRelativeHeight({ beforeContentHeight: beforeContentHeight, contentHeight: contentHeight, afterContentHeight: afterContentHeight });
             console.log("RelativeHeight: ", relativeHeight)
             // $scope.beforeContent[0].style.height = beforeContentHeight + "px";
@@ -100,6 +100,7 @@ app.controller('virtualScrollerController', function JournalController($scope) {
             $scope.beforeContent[0].style.height = relativeHeight.beforeContent + "px";
             $scope.afterContent[0].style.height = relativeHeight.afterContent + "px";
             //scrollTo(self.pageIndex <= 1 ? 0 : beforeContentHeight);
+            self.relativeUnit = relativeHeight.relativeUnit;
 
             pagingRepository.add({ pageIndex: self.pageIndex, topOffset: relativeHeight.beforeContent, bottomOffset: relativeHeight.afterContent });
             self.enableScroll = true;
@@ -107,10 +108,12 @@ app.controller('virtualScrollerController', function JournalController($scope) {
         function recalculateRelativeHeight(heightOption) {
             var scrollHeight = $scope.scroller[0].scrollHeight;
             var scrollTop = $scope.scroller[0].scrollTop;
+            var relativeUnit = (heightOption.beforeContentHeight + heightOption.contentHeight + heightOption.afterContentHeight) / scrollHeight;
             var relativeOption = {
-                beforeContent: scrollTop,
+                relativeUnit: relativeUnit,
+                beforeContent: scrollTop * relativeUnit,
                 content: heightOption.contentHeight,
-                afterContent: scrollHeight - scrollTop - heightOption.contentHeight
+                afterContent: (scrollHeight - scrollTop) * relativeUnit - heightOption.contentHeight
             };
             return relativeOption;
         }
@@ -178,7 +181,7 @@ app.controller('virtualScrollerController', function JournalController($scope) {
                     itemIndex: parseInt(item.attributes["item-index"].value),
                     offsetTop: item.offsetTop,
                     pageIndex: self.pageIndex,
-                    pageSize: 8
+                    pageSize: $scope.pageSize
                 };
                 eventManager.publish("onScrollItemHeight_Updated", option);
             });
@@ -186,14 +189,22 @@ app.controller('virtualScrollerController', function JournalController($scope) {
         function onScroll(event) {
             if (!self.enableScroll) { return true; }
             var scrollTop = event.target.scrollTop;
-            var position = window.positionRepository.getByOffset(scrollTop);
-            if (!position) { return; }
-            if (position >= $scope.toIndex - 3) {
+            var page = window.pagingRepository.getByIndex(self.pageIndex);
+            if (!page) { return; }
+            if (page.bottomOffset - 100 < scrollTop) {
                 self.enableScroll = false;
-                console.log("Next", position, scrollTop);
+                console.log("Next", page, scrollTop);
                 self.next();
             }
-            console.log("Scroll:", self.enableScroll, position, scrollTop, $scope.toIndex);
+            // var scrollTop = event.target.scrollTop;
+            // var position = window.positionRepository.getByOffset(scrollTop);
+            // if (!position) { return; }
+            // if (position >= $scope.toIndex - 3) {
+            //     self.enableScroll = false;
+            //     console.log("Next", position, scrollTop);
+            //     self.next();
+            // }
+            console.log("Scroll:", self.enableScroll, page, scrollTop);
         }
 
         function loadData(pageIndex) {

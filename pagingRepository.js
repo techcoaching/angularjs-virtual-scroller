@@ -2,19 +2,21 @@
     var KEY = "PAGING";
     window.pagingRepository = {
         add: add,
-        get: get
+        getByIndex: getByIndex
+        //getByOffset: getByOffset
     };
-    function get(index) {
+    function getByOffset(offset) {
         var items = getAll();
-        var pro = items[index];
-        if (!pro) { return null; }
-        return items[pro];
+    }
+    function getByIndex(index) {
+        var items = getAll();
+        return items[index];
     }
     function add(option) {
-        if (!item) { return; }
+        if (!option) { return; }
         var items = getAll();
         items[option.pageIndex] = option;
-        localStorage.setItem(this.key, JSON.stringify(items))
+        localStorage.setItem(KEY, JSON.stringify(items))
     }
     function getAll() {
         var json = localStorage.getItem(KEY)
