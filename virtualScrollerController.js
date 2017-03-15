@@ -89,13 +89,39 @@ app.controller('virtualScrollerController', function JournalController($scope) {
             aiHelper.updatePredictionRules($scope.heights);
 
             var beforeContentHeight = getPredictBeforeContentHeight($scope);
+            //var beforeContentHeight= $scope.scroller[0].scrollTop;
             var afterContentHeight = getPredictAfterContentHeight($scope, beforeContentHeight);
-            console.log("Height of before content: ", $scope.beforeContent[0].style.height, beforeContentHeight)
-            $scope.beforeContent[0].style.height = beforeContentHeight + "px";
-            $scope.afterContent[0].style.height = afterContentHeight + "px";
-            scrollTo(self.pageIndex <= 1 ? 0 : beforeContentHeight);
+            var contentHeight = $scope.content[0].style.height;
+            var relativeHeight = recalculateRelativeHeight({ beforeContentHeight: beforeContentHeight, contentHeight: contentHeight, afterContentHeight: afterContentHeight });
+            console.log("RelativeHeight: ", relativeHeight)
+            // $scope.beforeContent[0].style.height = beforeContentHeight + "px";
+            // $scope.afterContent[0].style.height = afterContentHeight + "px";
 
+            $scope.beforeContent[0].style.height = relativeHeight.beforeContent + "px";
+            $scope.afterContent[0].style.height = relativeHeight.afterContent + "px";
+            //scrollTo(self.pageIndex <= 1 ? 0 : beforeContentHeight);
+
+            pagingRepository.add({ pageIndex: self.pageIndex, topOffset: relativeHeight.beforeContent, bottomOffset: relativeHeight.afterContent });
             self.enableScroll = true;
+        }
+        function recalculateRelativeHeight(heightOption) {
+            var scrollHeight = $scope.scroller[0].scrollHeight;
+            var scrollTop = $scope.scroller[0].scrollTop;
+            var relativeOption = {
+                beforeContent: scrollTop,
+                content: heightOption.contentHeight,
+                afterContent: scrollHeight - scrollTop - heightOption.contentHeight
+            };
+            return relativeOption;
+        }
+        function scrollTo(offset) {
+            console.log("scrollTo", offset);
+            //$scope.scroller[0].scrollTop = 2 * offset + "px";
+            //window.scrollTo(3*offset, 3*offset+700);
+            // $($scope.scroller).animate({
+            //     scrollTop: offset
+            // }, 2000);
+            //$scope.content[0].top = "0px";
         }
         function initScrollerObject($scope) {
             if (!$scope.scroller) {
@@ -121,11 +147,7 @@ app.controller('virtualScrollerController', function JournalController($scope) {
 
             });
         }
-        function scrollTo(offset) {
-            console.log("scrollTo", offset);
-            $scope.scroller[0].scrollTop = 2*offset + "px";
-            //$scope.content[0].top = "0px";
-        }
+
         function getPredictAfterContentHeight($scope, heightOfBeforeContent) {
             var position = positionRepository.getByIndex($scope.totalItems);
             var lastItemIndex = $scope.items[0].paragraphs.lastOrDefault().itemIndex;
